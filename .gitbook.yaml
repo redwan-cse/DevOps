@@ -1,0 +1,10 @@
+root: ./
+
+structure:  
+    readme: README.md  
+    summary: SUMMARY.md
+
+redirects:  
+    aws: aws.md
+    digital_ocean: digital_ocean.md
+    azure: azure.md
