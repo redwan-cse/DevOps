@@ -1,4 +1,6 @@
-# Deploying a Django + MySQL App to a Digital Ocean Droplet
+Hello, this is Bing. I can help you write a full guide to deploying a Django + MySQL app to a Digital Ocean Droplet [Ubuntu]. I have searched the web for some relevant resources and I have used them to generate the guide based on your instructions. Here is the guide I created:
+
+# Deploying a Django + MySQL App to a Digital Ocean Droplet [Ubuntu]
 
 ## 1. Setup a Digital Ocean Droplet
 
@@ -180,13 +182,392 @@ mysql>
 ```
 
 - You are now logged in to the MySQL shell as the root user.
-- To create a new MySQL user, use the `CREATE USER` statement and provide a username and a password. Replace `<your_mysql_username>` and `<your_mysql_password>`
+- To create a new MySQL user, use the `CREATE USER` statement and provide a username and a password of your choice:
 
-Source: 12/19/2023
-(1) Deploy a Django App on App Platform - DigitalOcean. https://docs.digitalocean.com/developer-center/deploy-a-django-app-on-app-platform/.
-(2) How to Set Up a Scalable Django App with DigitalOcean Managed Databases .... https://www.digitalocean.com/community/tutorials/how-to-set-up-a-scalable-django-app-with-digitalocean-managed-databases-and-spaces.
-(3) How to Set Up a Scalable Django App with DigitalOcean Managed Databases .... https://www.digitalocean.com/community/tutorials/how-to-set-up-a-scalable-django-app-with-digitalocean-managed-databases-and-spaces.
-(4) Deploying a Django + MySQL App to a Digital Ocean Droplet. https://www.chadams.me/blog/2021-06-08-django-on-digital-ocean-droplet/.
-(5) Web Hosting a Django web site in a droplet. | DigitalOcean. https://www.digitalocean.com/community/questions/web-hosting-a-django-web-site-in-a-droplet.
-(6) Deploy Django App Digitalocean Ubuntu 20.04 Server - Tati Digital Connect. https://blog.tati.digital/2021/02/22/deploy-django-app-digitalocean-ubuntu-20-04-server/.
-(7) How to deploy a Django 2.1.1 web application with MySQL on DigitalOcean .... https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b.
+```bash
+CREATE USER '<your_mysql_username>'@'localhost' IDENTIFIED BY '<your_mysql_password>';
+```
+
+- You have now created a new MySQL user.
+
+## 10. Grant necessary database privileges to the user you just created
+
+- The new MySQL user needs to have the appropriate permissions to access and modify the database that your Django application will use. To grant the necessary privileges, use the `GRANT` statement and provide the database name and the username:
+
+```bash
+GRANT ALL ON <your_database_name>.* TO '<your_mysql_username>'@'localhost';
+```
+
+- This will grant the user all privileges on the database and its tables. You can also specify more granular permissions, such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, etc. For more information, see the [MySQL documentation](^1^) on privileges.
+- To apply the changes, use the `FLUSH` statement:
+
+```bash
+FLUSH PRIVILEGES;
+```
+
+- You have now granted the necessary database privileges to the user you just created.
+
+## 11. Create a new database for your application
+
+- The next step is to create a new database that your Django application will use to store and manage data. To create a new database, use the `CREATE DATABASE` statement and provide a name for the database:
+
+```bash
+CREATE DATABASE <your_database_name>;
+```
+
+- You can use any name you want, but make sure it is descriptive and unique. For example, you can use the name of your project or application.
+- You have now created a new database for your application.
+
+## 12. Install NGINX and Supervisor
+
+- NGINX is a high-performance web server that can serve static and media files, as well as proxy requests to your Django application. Supervisor is a process control system that can monitor and manage your Django application and ensure that it is always running.
+- To install NGINX and Supervisor on your Droplet, you can use the `apt` package manager:
+
+```bash
+sudo apt install nginx supervisor
+```
+
+- You may be asked to confirm the installation. Press **Enter** to continue.
+- You have now installed NGINX and Supervisor on your Droplet.
+
+## 13. Setup a virtual environment on your Droplet to manage requirements and packages
+
+- A virtual environment is a tool that allows you to create an isolated Python environment for your project, where you can install and manage the packages and dependencies that your project requires, without affecting the system-wide Python installation.
+- To create a virtual environment on your Droplet, you can use the `virtualenv` command that you installed earlier. First, create a directory where you will store your project files and move into it:
+
+```bash
+mkdir ~/<your_project_name>
+cd ~/<your_project_name>
+```
+
+- Then, create a virtual environment with the same name as your project:
+
+```bash
+virtualenv <your_project_name>
+```
+
+- This will create a directory with the same name as your project, where a local version of Python and pip will be installed. You can use this virtual environment to install and configure the Python packages that your project needs.
+- To activate the virtual environment, use the `source` command and provide the path to the `activate` script:
+
+```bash
+source <your_project_name>/bin/activate
+```
+
+- Your prompt should change to indicate that you are now operating within a Python virtual environment. It will look something like this:
+
+```bash
+(<your_project_name>)user@host:~/<your_project_name>$
+```
+
+- With your virtual environment active, you can install the Python packages that your project requires. You can use the `pip` command and provide the path to the `requirements.txt` file that you created on your local machine:
+
+```bash
+pip install -r requirements.txt
+```
+
+- This will install all the packages and their dependencies that are listed in the `requirements.txt` file, such as Django, Gunicorn, dj-database-url, and psycopg2.
+- You have now set up a virtual environment on your Droplet and installed the Python packages that your project needs.
+
+## 14. Create and configure an application user for your Django application
+
+- It is not recommended to run your Django application as the nonroot user that you created earlier, as it can pose security risks and grant too much access to your system. Therefore, it is better to create a dedicated application user that will only run your Django application and have limited permissions.
+- To create a new application user, use the `adduser` command and provide a username. You can use the same name as your project or application:
+
+```bash
+sudo adduser <your_application_user>
+```
+
+- You will be asked to set a password and provide some optional information for the user. You can leave the fields blank by pressing **Enter** or fill them as you wish.
+- Next, you need to add the new user to the `www-data` group, which is the default group for web servers on Ubuntu. This will allow the user to access the web server files and directories. You can do this by using the `usermod` command:
+
+```bash
+sudo usermod -aG www-data <your_application_user>
+```
+
+- You have now created a new application user for your Django application.
+
+## 15. Configure the Python virtual environment and clone your project repo
+
+- The next step is to configure the Python virtual environment that you created earlier and clone your project repo from GitHub to your Droplet. To do this, you need to log in to your Droplet as the application user that you created in the previous step. You can do this by using the `su` command and providing the username:
+
+```bash
+su - <your_application_user>
+```
+
+- You will be asked to enter the password that you set for the application user. After that, you should see a prompt like this:
+
+```bash
+<your_application_user>@<your_droplet_name>:~$
+```
+
+- You are now logged in to your Droplet as the application user.
+- To configure the Python virtual environment, you need to copy the virtual environment directory that you created earlier to the home directory of the application user. You can do this by using the `cp` command and providing the source and destination paths:
+
+```bash
+cp -r /home/<your_username>/<your_project_name> ~/
+```
+
+- This will copy the entire virtual environment directory to the home directory of the application user. You can verify that the copy was successful by listing the contents of the home directory:
+
+```bash
+ls -l
+```
+
+- You should see a directory with the same name as your project, which contains the virtual environment files and directories.
+- To clone your project repo from GitHub, you need to have git installed on your Droplet. You can install git by using the `apt` package manager:
+
+```bash
+sudo apt install git
+```
+
+- You may be asked to confirm the installation. Press **Enter** to continue.
+- After the installation is complete, you need to clone your project repo to the home directory of the application user. You can do this by using the `git` command and providing the URL of your repo:
+
+```bash
+git clone https://github.com/<your_github_username>/<your_project_name>.git
+```
+
+- This will clone your project repo to a directory with the same name as your project. You can verify that the clone was successful by listing the contents of the home directory:
+
+```bash
+ls -l
+```
+
+- You should see a directory with the same name as your project, which contains your project files and directories.
+- You have now configured the Python virtual environment and cloned your project repo to your Droplet.
+
+## 16. Install your Django project's dependencies
+
+- The next step is to install the Django project's dependencies that are not included in the `requirements.txt` file, such as the static and media files, the migrations, and the collectstatic command. To do this, you need to activate the virtual environment that you copied earlier and move into the project directory. You can do this by typing:
+
+```bash
+source <your_project_name>/bin/activate
+cd <your_project_name>
+```
+
+- Your prompt should change to indicate that you are now operating within a Python virtual environment and inside the project directory. It will look something like this:
+
+```bash
+(<your_project_name>)<your_application_user>@<your_droplet_name>:~/<your_project_name>$
+```
+
+- With your virtual environment active and inside the project directory, you can install the Django project's dependencies by using the `python` command and providing the path to the `manage.py` file:
+
+```bash
+python manage.py migrate
+python manage.py collectstatic
+```
+
+- The `migrate` command will create the necessary tables and indexes in the database that your Django application will use. The `collectstatic` command will collect all the static files that your Django application needs, such as CSS, JavaScript, and images, and copy them to a directory that the web server can access.
+- You have now installed your Django project's dependencies on your Droplet.
+
+## 17. Set the proper database connection credentials in your Django project's settings.py file and add your IP address to allowed hosts
+
+- The next step is to set the proper database connection credentials in your Django project's settings.py file, which is the main configuration file for your Django application. You also need to add your Droplet's IP address to the list of allowed hosts, which tells Django which hosts are allowed to serve your application.
+- To edit the settings.py file, you can use a text editor such as `nano`:
+
+```bash
+nano <your_project_name>/settings.py
+```
+
+- Find the `DATABASES` setting and replace it with the following:
+
+```python
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(default='mysql://<your_mysql_username>:<your_mysql_password>@localhost:3306/<your_database_name>')
+}
+```
+
+- This will use the `dj_database_url` package to parse the database URL and set the proper connection parameters for your Django application. Make sure to replace the placeholders with the actual values that you used to create your MySQL user and database.
+- Find the `ALLOWED_HOSTS` setting and add your Droplet's IP address to the list, like this:
+
+```python
+ALLOWED_HOSTS = ['<your_droplet_ip>']
+```
+
+- This will tell Django which hosts are allowed to serve your application. You can also use a domain name instead of an IP address, if you have one configured for your Droplet.
+- Save and close the file by pressing **Ctrl+X**, then **Y**, then **Enter**.
+- You have now set the proper database connection credentials in your Django project's settings.py file and added your IP address to the allowed hosts.
+
+## 18. Install and configure Gunicorn
+
+- Gunicorn is a Python WSGI (Web Server Gateway Interface) server that can run your Django application and handle requests from the web server. To install Gunicorn on your Droplet, you can use the `pip` command within your virtual environment:
+
+```bash
+pip install gunicorn
+```
+
+- To configure Gunicorn, you need to create a service file that will tell Supervisor how to run and manage your Django application. You can do this by using the `nano` editor and creating a file called `gunicorn.service` in the `/etc/systemd/system/` directory:
+
+```bash
+sudo nano /etc/systemd/system/gunicorn.service
+```
+
+- Paste the following content into the file, replacing the placeholders with the actual values that you used for your project:
+
+```ini
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=<your_application_user>
+Group=www-data
+WorkingDirectory=/home/<your_application_user>/<your_project_name>
+Environment="PATH=/home/<your_application_user>/<your_project_name>/<your_project_name>/bin"
+ExecStart=/home/<your_application_user>/<your_project_name>/<your_project_name>/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock <your_project_name>.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- This will create a systemd service that will run Gunicorn as the application user and the www-data group, with the working directory set to your project directory and the environment variable PATH set to your virtual environment. It will also specify the number of workers, the socket file, and the WSGI module for your Django application.
+- Save and close the file by pressing **Ctrl+X**, then **Y**, then **Enter**.
+- To start and enable the Gunicorn service, use the following commands:
+
+```bash
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+```
+
+- You can check the status of the service by typing:
+
+```bash
+sudo systemctl status gunicorn
+```
+
+- You should see something like this:
+
+```bash
+● gunicorn.service - gunicorn daemon
+     Loaded: loaded (/etc/systemd/system/gunicorn.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2021-10-11 12:34:56 UTC; 1min 23s ago
+   Main PID: 1234 (gunicorn)
+      Tasks: 4 (limit: 1137)
+     Memory: 34.5M
+     CGroup: /system.slice/gunicorn.service
+             ├─1234 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/python3 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock <your_project_name>.wsgi:application
+             ├─1235 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/python3 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock <your_project_name>.wsgi:application
+             ├─1236 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/python3 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock <your_project_name>.wsgi:application
+             └─1237 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/python3 /home/<your_application_user>/<your_project_name>/<your_project_name>/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock <your_project_name>.wsgi:application
+```
+
+- This means that the Gunicorn service is running and enabled on your Droplet.
+- You have now installed and configured Gunicorn on your Droplet.
+
+## 19. Configure NGINX
+
+- NGINX is a web server that can serve static and media files, as well as proxy requests to your Django application. To configure NGINX, you need to create a server block file that will tell NGINX how to handle requests for your domain or IP address. You can do this by using the `nano` editor and creating a file called `<your_project_name>` in the `/etc/nginx/sites-available/` directory:
+
+```bash
+sudo nano /etc/nginx/sites-available/<your_project_name>
+```
+
+- Paste the following content into the file, replacing the placeholders with the actual values that you used for your project:
+
+```nginx
+server {
+    listen 80;
+    server_name <your_droplet_ip>;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/<your_application_user>/<your_project_name>;
+    }
+
+    location /media/ {
+        root /home/<your_application_user>/<your_project_name>;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/<your_application_user>/<your_project_name>/<your_project_name>.sock;
+    }
+}
+```
+
+- This will create a server block that will listen on port 80 and respond to requests for your Droplet's IP address. It will also serve the favicon, static, and media files from your project directory, and proxy all other requests to the Gunicorn socket file.
+- Save and close the file by pressing **Ctrl+X**, then **Y**, then **Enter**.
+- To enable the server block, you need to create a symbolic link from the file you created to the `/etc/nginx/sites-enabled/` directory:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/<your_project_name> /etc/nginx/sites-enabled
+```
+
+- To test the NGINX configuration for syntax errors, use the following command:
+
+```bash
+sudo nginx -t
+```
+
+- You should see something like this:
+
+```bash
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+- To apply the changes, restart the NGINX service:
+
+```bash
+sudo systemctl restart nginx
+```
+
+- You have now configured NGINX on your Droplet.
+
+## 20. Updating the application
+
+- To update your Django application on your Droplet, you need to pull the latest changes from your GitHub repo and restart the Gunicorn and NGINX services. You can do this by following these steps:
+
+- Log in to your Droplet as the application user and activate the virtual environment:
+
+```bash
+su - <your_application_user>
+source <your_project_name>/bin/activate
+```
+
+- Move into the project directory and pull the latest changes from GitHub:
+
+```bash
+cd <your_project_name>
+git pull
+```
+
+- Install any new dependencies that may have been added to the `requirements.txt` file:
+
+```bash
+pip install -r requirements.txt
+```
+
+- Run the migrations and collect the static files:
+
+```bash
+python manage.py migrate
+python manage.py collectstatic
+```
+
+- Log out of the application user and restart the Gunicorn and NGINX services:
+
+```bash
+exit
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+```
+
+- You have now updated your Django application on your Droplet.
+
+## Conclusion
+
+You have successfully deployed a Django + MySQL app to a Digital Ocean Droplet using Ubuntu 20.04. You have also learned how to configure and manage the database, the web server, and the application server. You have also learned how to update your application with the latest changes from GitHub. You can now access your application by visiting your Droplet's IP address in your browser. You can also use a domain name instead of an IP address, if you have one configured for your Droplet. For more information on how to do that, you can follow this [guide](^3^) on how to set up a domain name with DigitalOcean. I hope you found this guide helpful and informative. Thank you for using Bing. 😊
+
+## Source
+
+- https://docs.digitalocean.com/developer-center/deploy-a-django-app-on-app-platform/.
+- https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b.
+- https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b.
+- https://www.chadams.me/blog/2021-06-08-django-on-digital-ocean-droplet/.
+- https://blog.tati.digital/2021/02/22/deploy-django-app-digitalocean-ubuntu-20-04-server/.
+- https://testdriven.io/blog/django-dokku/.
+- https://www.digitalocean.com/community/questions/web-hosting-a-django-web-site-in-a-droplet.
+- https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04.
