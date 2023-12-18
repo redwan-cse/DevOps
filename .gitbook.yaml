@@ -1,10 +1,40 @@
 root: ./
 
-structure:  
+structure:
     readme: INTRO.md
     summary: SUMMARY.md
 
-redirects:  
+redirects:
     aws: aws.md
     digital_ocean: digital_ocean.md
     azure: azure.md
+    gcp: gcp.md
+    linode: linode.md
+    heroku: heroku.md
+    vultr: vultr.md
+    upcloud: upcloud.md
+    scaleway: scaleway.md
+    oracle: oracle.md
+    ibm: ibm.md
+    alibaba: alibaba.md
+    kubernetes: kubernetes.md
+    docker: docker.md
+    terraform: terraform.md
+    ansible: ansible.md
+    jenkins: jenkins.md
+    git: git.md
+    gitlab: gitlab.md
+    github: github.md
+    bitbucket: bitbucket.md
+    codefresh: codefresh.md
+    codebuild: codebuild.md
+    codepipeline: codepipeline.md
+    codecommit: codecommit.md
+    github_actions: github_actions.md
+    gitlab_ci: gitlab_ci.md
+    bitbucket_pipelines: bitbucket_pipelines.md
+    jenkinsfile: jenkinsfile.md
+    dockerfile: dockerfile.md
+    docker_compose: docker_compose.md
+    docker_swarm: docker_swarm.md
+    kubernetes_yaml: kubernetes_yaml.md
