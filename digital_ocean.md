@@ -1,309 +1,192 @@
-A comprehensive guide for deploying a Django + MySQL app to a Digital Ocean Droplet with Ubuntu. Please note that some steps might need adjustments based on your specific project requirements.
+# Deploying a Django + MySQL App to a Digital Ocean Droplet
 
-### 1. Setup a Digital Ocean Droplet
-#### a. Create a non-root user with sudo access
-```bash
-adduser your_username
-usermod -aG sudo your_username
-```
+## 1. Setup a Digital Ocean Droplet
 
-#### b. Disable root login
-Edit the SSH configuration file:
-```bash
-sudo nano /etc/ssh/sshd_config
-```
-Set `PermitRootLogin` to `no`. Save and exit, then restart SSH:
-```bash
-sudo systemctl restart ssh
-```
+- Log in to your [DigitalOcean account](^1^) and click on the **Create** button at the top right corner. Select **Droplets** from the menu.
+- Choose an image for your Droplet. For this guide, we will use **Ubuntu 20.04 (LTS) x64** as the base operating system.
+- Choose a plan for your Droplet. You can start with the **Basic** plan and select the size that suits your needs. For this guide, we will use the **$5/month** option with **1 GB** of memory and **25 GB** of disk space.
+- Choose a datacenter region for your Droplet. You can select the one that is closest to your location or your target audience.
+- Optionally, you can add additional options to your Droplet, such as backups, IPv6, private networking, or monitoring.
+- Add your SSH keys to your Droplet. This will allow you to log in to your Droplet securely and without a password. You can follow this [guide](^2^) to generate and add SSH keys to your DigitalOcean account.
+- Give your Droplet a name and click on the **Create Droplet** button. It may take a few minutes for your Droplet to be provisioned and ready.
 
-#### c. Enable SSH port on the firewall
+## 2. Use terminal to ssh into the Droplet you just created
+
+- Once your Droplet is ready, you can find its IP address on the DigitalOcean dashboard. Copy the IP address and open a terminal on your local machine.
+- Use the `ssh` command to connect to your Droplet as the root user. Replace the IP address with your Droplet's IP address:
+
 ```bash
-sudo ufw allow 22/tcp
+ssh root@<your_droplet_ip>
 ```
 
-#### d. Enable UFW (firewall)
+- You may see a warning message about the authenticity of the host. Type `yes` and press **Enter** to continue. You will not see this message again for this Droplet.
+- You should see a welcome message and a prompt like this:
+
 ```bash
-sudo ufw enable
+root@<your_droplet_name>:~#
 ```
 
-#### e. Enable password-less SSH authorized key login
-On your local machine, generate an SSH key pair if you haven't:
+- You are now logged in to your Droplet as the root user.
+
+## 3. Run updates
+
+- Before you install any packages or software on your Droplet, it is a good practice to update the package index and upgrade the existing packages to their latest versions. You can do this by running the following commands:
+
 ```bash
-ssh-keygen -t rsa
-```
-Copy the public key to your Droplet:
-```bash
-ssh-copy-id your_username@your_droplet_ip
+apt update
+apt upgrade
 ```
 
-#### f. Packages update/upgrade
+- You may be prompted to confirm some actions or restart some services. Follow the instructions on the screen and press **Enter** to continue.
+
+## 4. Create nonroot user with sudo access
+
+- It is not recommended to use the root user for everyday tasks, as it can pose security risks and cause irreversible damage to your system. Therefore, it is better to create a regular user account with sudo privileges, which will allow you to perform administrative tasks by prefixing commands with `sudo`.
+- To create a new user account, use the `adduser` command and follow the prompts. Replace `<your_username>` with your desired username:
+
 ```bash
-sudo apt update
-sudo apt upgrade
+adduser <your_username>
 ```
 
-### 2. Install MySQL and run configuration script
+- You will be asked to set a password and provide some optional information for the user. You can leave the fields blank by pressing **Enter** or fill them as you wish.
+- Next, you need to add the new user to the `sudo` group, which will grant the user sudo privileges. You can do this by using the `usermod` command:
+
+```bash
+usermod -aG sudo <your_username>
+```
+
+- You have now created a nonroot user with sudo access.
+
+## 5. Disable root login
+
+- For security reasons, it is advisable to disable root login via SSH, as it can prevent unauthorized access to your Droplet. To do this, you need to edit the SSH configuration file using a text editor such as `nano`:
+
+```bash
+nano /etc/ssh/sshd_config
+```
+
+- Find the line that says `PermitRootLogin yes` and change it to `PermitRootLogin no`. If the line is commented out with a `#` symbol, remove the `#` as well.
+- Save and close the file by pressing **Ctrl+X**, then **Y**, then **Enter**.
+- Restart the SSH service to apply the changes:
+
+```bash
+systemctl restart ssh
+```
+
+- You have now disabled root login via SSH. From now on, you will need to use the nonroot user account to log in to your Droplet.
+
+## 6. Enable ssh port on the firewall
+
+- To protect your Droplet from unwanted traffic and potential attacks, you can enable a firewall that will only allow connections to specific ports. Ubuntu comes with a firewall tool called `ufw`, which stands for **U**ncomplicated **F**ire**w**all.
+- Before you enable the firewall, you need to make sure that the SSH port (22 by default) is allowed, otherwise you will lock yourself out of your Droplet. You can do this by using the `ufw` command:
+
+```bash
+ufw allow ssh
+```
+
+- You should see a message saying `Rules updated` and `Rules updated (v6)`.
+- You can now enable the firewall by typing:
+
+```bash
+ufw enable
+```
+
+- You will be asked to confirm the action. Type `y` and press **Enter**. You should see a message saying `Firewall is active and enabled on system startup`.
+- You can check the status of the firewall and the rules that are applied by typing:
+
+```bash
+ufw status
+```
+
+- You should see something like this:
+
+```bash
+Status: active
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW       Anywhere
+22/tcp (v6)                ALLOW       Anywhere (v6)
+```
+
+- This means that the firewall is active and only allows connections to the SSH port from anywhere.
+
+## 7. Enable password-less ssh authorized key login
+
+- To further enhance the security and convenience of logging in to your Droplet, you can set up password-less SSH authorized key login, which will allow you to log in to your Droplet without entering a password, using a pair of cryptographic keys.
+- You will need to generate a pair of keys on your local machine, if you have not done so already. You can follow this [guide](^2^) to generate and add SSH keys to your DigitalOcean account.
+- Once you have your SSH keys, you need to copy the public key to your Droplet. You can do this by using the `ssh-copy-id` command and providing your nonroot user's username and your Droplet's IP address:
+
+```bash
+ssh-copy-id <your_username>@<your_droplet_ip>
+```
+
+- You will be asked to enter the password for your nonroot user. After that, you should see a message saying that your key has been added to your Droplet.
+- To test that password-less SSH login works, you can try to log in to your Droplet using the `ssh` command and your nonroot user's username:
+
+```bash
+ssh <your_username>@<your_droplet_ip>
+```
+
+- You should not be prompted for a password and you should see a prompt like this:
+
+```bash
+<your_username>@<your_droplet_name>:~$
+```
+
+- You have now enabled password-less SSH authorized key login for your nonroot user.
+
+## 8. Install MySQL and run configuration script
+
+- MySQL is a popular open-source relational database management system that can store and manage data for your Django application. To install MySQL on your Droplet, you can use the `apt` package manager:
+
 ```bash
 sudo apt install mysql-server
+```
+
+- You may be asked to confirm the installation. Press **Enter** to continue.
+- After the installation is complete, you need to run a configuration script that will help you secure your MySQL installation and set a password for the root user. You can do this by typing:
+
+```bash
 sudo mysql_secure_installation
 ```
 
-### 3. Create a dedicated MySQL user
-```bash
-sudo mysql
-```
-```sql
-CREATE USER 'your_mysql_username'@'localhost' IDENTIFIED BY 'your_password';
-```
-
-### 4. Grant necessary database privileges to the user
-```sql
-GRANT ALL PRIVILEGES ON *.* TO 'your_mysql_username'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
-```
-
-### 5. Create a new database for your application
-```bash
-sudo mysql -u your_mysql_username -p
-```
-```sql
-CREATE DATABASE your_database_name CHARACTER SET UTF8;
-EXIT;
-```
-
-### 6. Install NGINX and Supervisor
-```bash
-sudo apt install nginx supervisor
-sudo systemctl enable supervisor
-```
-
-### 7. Setup a virtual environment on your Droplet
-```bash
-sudo apt install python3-venv
-mkdir ~/your_project
-cd ~/your_project
-python3 -m venv venv
-```
-
-### 8. Create and configure an application user
-```bash
-sudo useradd -s /bin/bash -m your_app_user
-sudo passwd your_app_user
-sudo usermod -aG sudo your_app_user
-```
-
-### 9. Configure the Python virtual environment and clone your project repo
-```bash
-su - your_app_user
-cd ~
-source ~/your_project/venv/bin/activate
-git clone https://github.com/redwan-cse/pets-finder.git
-```
-
-### 10. Install Django project dependencies
-```bash
-cd pets-finder
-pip install -r requirements.txt
-```
-
-### 11. Set the proper database connection credentials
-Edit `settings.py` in your Django project and update the database settings.
-
-### 12. Test everything
-```bash
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-```
-Visit `http://your_droplet_ip:8000` in your browser.
-
-### 13. Install and configure Gunicorn
-```bash
-pip install gunicorn
-gunicorn your_project.wsgi:application --bind 0.0.0.0:8000
-```
-
-### 14. Configure Supervisor
-Create a new Supervisor configuration file:
-```bash
-sudo nano /etc/supervisor/conf.d/your_project.conf
-```
-```ini
-[program:your_project]
-command=/path/to/venv/bin/gunicorn your_project.wsgi:application --bind 0.0.0.0:8000
-directory=/path/to/your_project
-autostart=true
-autorestart=true
-stderr_logfile=/var/log/your_project.err.log
-stdout_logfile=/var/log/your_project.out.log
-```
-
-### 15. Configure NGINX
-Create a new NGINX site configuration:
-```bash
-sudo nano /etc/nginx/sites-available/your_project
-```
-```nginx
-server {
-    listen 80;
-    server_name your_domain_or_ip;
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location /static/ {
-        root /path/to/your_project;
-    }
-
-    location / {
-        include proxy_params;
-        proxy_pass http://127.0.0.1:8000;
-    }
-}
-```
-Enable the site:
-```bash
-sudo ln -s /etc/nginx/sites-available/your_project /etc/nginx/sites-enabled
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-### 16. Updating the application
-```bash
-su - your_app_user
-cd ~/your_project
-git pull origin master
-pip install -r requirements.txt
-python manage.py migrate
-sudo supervisorctl restart your_project
-sudo systemctl restart nginx
-```
-
-Your Django + MySQL app should now be successfully deployed on Digital Ocean! Adjust the paths, names, and configurations according to your specific setup.
-
-
-Certainly! Combining the deployment automation and webhook setup for secure and production-level configuration involves integrating the deployment script with a webhook endpoint protected by a reverse proxy (NGINX) and ensuring secure communication between GitHub and your server. Let's go step by step:
-
-### 1. Prepare your VPS for automated deployment
-
-#### a. Create a deployment script
-
-Create a script on your VPS that pulls the latest changes from the GitHub repository, installs dependencies, and restarts the necessary services. For example, create a file named `deploy.sh`:
+- You will be asked a series of questions and you can follow the recommendations below:
 
 ```bash
-#!/bin/bash
-
-cd /path/to/your_project
-git pull origin main
-source /path/to/venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-sudo supervisorctl restart your_project
-sudo systemctl restart nginx
+- Would you like to setup VALIDATE PASSWORD component? N
+- Please set the password for root here. <Enter a strong password and press Enter>
+- Remove anonymous users? Y
+- Disallow root login remotely? Y
+- Remove test database and access to it? Y
+- Reload privilege tables now? Y
 ```
 
-Make the script executable:
+- You have now installed and configured MySQL on your Droplet.
+
+## 9. Create a dedicated MySQL user
+
+- It is not recommended to use the root user for your Django application, as it can pose security risks and grant too much access to your database. Therefore, it is better to create a dedicated MySQL user that will only have access to the database that your application needs.
+- To create a new MySQL user, you need to log in to the MySQL shell as the root user. You can do this by typing:
 
 ```bash
-chmod +x deploy.sh
+sudo mysql -u root -p
 ```
 
-#### b. Grant sudo permissions
-
-If your deployment script requires `sudo` privileges (e.g., restarting services), allow your user to run the script without entering a password by adding the following line to the sudoers file:
+- You will be asked to enter the password that you set for the root user in the previous step. After that, you should see a prompt like this:
 
 ```bash
-sudo visudo
+mysql>
 ```
 
-Add the following line at the end (replace `your_user` and `/path/to/deploy.sh` with your actual user and script path):
+- You are now logged in to the MySQL shell as the root user.
+- To create a new MySQL user, use the `CREATE USER` statement and provide a username and a password. Replace `<your_mysql_username>` and `<your_mysql_password>`
 
-```text
-your_user ALL=(ALL) NOPASSWD: /path/to/deploy.sh
-```
-
-### 2. Set up a web server and webhook for automated deployment
-
-#### a. Install Flask (for webhook)
-
-```bash
-pip install flask
-```
-
-#### b. Create a Flask app (for webhook)
-
-Create a file named `webhook_receiver.py`:
-
-```python
-from flask import Flask, request
-import subprocess
-
-app = Flask(__name__)
-
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    # Verify GitHub webhook secret here if used
-
-    subprocess.run(['/path/to/deploy.sh'])
-    return 'Update triggered successfully\n'
-
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=your_webhook_port)
-```
-
-Replace `/path/to/deploy.sh` with the actual path to your deployment script, and set `your_webhook_port` to a port of your choice.
-
-### 3. Configure NGINX for the webhook
-
-#### a. Create an NGINX configuration file for the webhook
-
-```bash
-sudo nano /etc/nginx/sites-available/webhook
-```
-
-Add the following configuration (replace placeholders):
-
-```nginx
-server {
-    listen 80;
-    server_name your_domain_or_ip;
-
-    location / {
-        proxy_pass http://127.0.0.1:your_webhook_port;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
-```
-
-#### b. Enable the site and restart NGINX
-
-```bash
-sudo ln -s /etc/nginx/sites-available/webhook /etc/nginx/sites-enabled
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-### 4. Set up a GitHub webhook
-
-#### a. Open the GitHub repository settings
-
-- Go to your GitHub repository.
-- Navigate to "Settings" > "Webhooks" > "Add webhook."
-
-#### b. Configure the webhook
-
-- Payload URL: Set this to the endpoint on your VPS where NGINX forwards requests (e.g., `http://your_domain_or_ip/webhook`).
-- Content type: Choose "application/json."
-- Secret: Optionally, add a secret for additional security.
-- Which events would you like to trigger this webhook? Choose "Just the push event."
-
-#### c. Add the webhook
-
-Click "Add webhook" to save the configuration.
-
-### 5. Test the automated deployment
-
-Push a change to the main branch on GitHub and check if the deployment script is triggered on your VPS.
-
-Now, every time you push to the main branch on GitHub, the webhook will notify your VPS, and the deployment script will automatically update your application. This setup includes a reverse proxy (NGINX) for security and production-level configurations. Adjust paths and configurations as needed for your specific setup.
+Source: 12/19/2023
+(1) Deploy a Django App on App Platform - DigitalOcean. https://docs.digitalocean.com/developer-center/deploy-a-django-app-on-app-platform/.
+(2) How to Set Up a Scalable Django App with DigitalOcean Managed Databases .... https://www.digitalocean.com/community/tutorials/how-to-set-up-a-scalable-django-app-with-digitalocean-managed-databases-and-spaces.
+(3) How to Set Up a Scalable Django App with DigitalOcean Managed Databases .... https://www.digitalocean.com/community/tutorials/how-to-set-up-a-scalable-django-app-with-digitalocean-managed-databases-and-spaces.
+(4) Deploying a Django + MySQL App to a Digital Ocean Droplet. https://www.chadams.me/blog/2021-06-08-django-on-digital-ocean-droplet/.
+(5) Web Hosting a Django web site in a droplet. | DigitalOcean. https://www.digitalocean.com/community/questions/web-hosting-a-django-web-site-in-a-droplet.
+(6) Deploy Django App Digitalocean Ubuntu 20.04 Server - Tati Digital Connect. https://blog.tati.digital/2021/02/22/deploy-django-app-digitalocean-ubuntu-20-04-server/.
+(7) How to deploy a Django 2.1.1 web application with MySQL on DigitalOcean .... https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b.
