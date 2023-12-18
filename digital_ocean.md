@@ -4,12 +4,12 @@ Hello, this is Bing. I can help you write a full guide to deploying a Django + M
 
 ## 1. Setup a Digital Ocean Droplet
 
-- Log in to your [DigitalOcean account](^1^) and click on the **Create** button at the top right corner. Select **Droplets** from the menu.
+- Log in to your [DigitalOcean account](https://docs.digitalocean.com/developer-center/deploy-a-django-app-on-app-platform/) and click on the **Create** button at the top right corner. Select **Droplets** from the menu.
 - Choose an image for your Droplet. For this guide, we will use **Ubuntu 20.04 (LTS) x64** as the base operating system.
 - Choose a plan for your Droplet. You can start with the **Basic** plan and select the size that suits your needs. For this guide, we will use the **$5/month** option with **1 GB** of memory and **25 GB** of disk space.
 - Choose a datacenter region for your Droplet. You can select the one that is closest to your location or your target audience.
 - Optionally, you can add additional options to your Droplet, such as backups, IPv6, private networking, or monitoring.
-- Add your SSH keys to your Droplet. This will allow you to log in to your Droplet securely and without a password. You can follow this [guide](^2^) to generate and add SSH keys to your DigitalOcean account.
+- Add your SSH keys to your Droplet. This will allow you to log in to your Droplet securely and without a password. You can follow this [guide](https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b) to generate and add SSH keys to your DigitalOcean account.
 - Give your Droplet a name and click on the **Create Droplet** button. It may take a few minutes for your Droplet to be provisioned and ready.
 
 ## 2. Use terminal to ssh into the Droplet you just created
