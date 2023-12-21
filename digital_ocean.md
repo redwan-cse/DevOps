@@ -85,6 +85,12 @@ systemctl restart ssh
 ```bash
 ufw allow ssh
 ```
+- You can also enable HTTP/HTTPS and MySQL for later
+```bash
+ufw allow http
+ufw allow https
+ufw allow mysql
+```
 
 - You should see a message saying `Rules updated` and `Rules updated (v6)`.
 - You can now enable the firewall by typing:
@@ -292,7 +298,7 @@ sudo apt install git
 - To configure the Python virtual environment, you need to copy the virtual environment directory that you created earlier to the home directory of the application user. You can do this by using the `cp` command and providing the source and destination paths:
 
 ```bash
-sudo cp -r /home/<your_username>/<your_project_name>/<virtual_environment_name> ~/<your_application_user>/<your_project_name>/
+sudo cp -r /home/<your_username>/<your_project_name>/<virtual_environment_name> ~/<your_application_user>/
 ```
 
 - This will copy the entire virtual environment directory to the home directory of the application user.
