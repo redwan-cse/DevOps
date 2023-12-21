@@ -69,7 +69,7 @@ usermod -aG sudo <your_username>
 
 - You have now created a nonroot user with sudo access.
 
-### 5. Disable root login
+### Disable root login
 
 - For security reasons, it is advisable to disable root login via SSH, as it can prevent unauthorized access to your Droplet. To do this, you need to edit the SSH configuration file using a text editor such as `nano`:
 
