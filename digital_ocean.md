@@ -116,7 +116,7 @@ To                         Action      From
 ## 7. Enable password-less ssh authorized key login
 
 - To further enhance the security and convenience of logging in to your Droplet, you can set up password-less SSH authorized key login, which will allow you to log in to your Droplet without entering a password, using a pair of cryptographic keys.
-- You will need to generate a pair of keys on your local machine, if you have not done so already. You can follow this [guide](^2^) to generate and add SSH keys to your DigitalOcean account.
+- You will need to generate a pair of keys on your local machine, if you have not done so already. You can follow this [guide](https://medium.com/@bernardo.laing/how-to-deploy-a-django-2-1-1-web-application-with-mysql-on-digitalocean-e2d22f59264b) to generate and add SSH keys to your DigitalOcean account.
 - Once you have your SSH keys, you need to copy the public key to your Droplet. You can do this by using the `ssh-copy-id` command and providing your nonroot user's username and your Droplet's IP address:
 
 ```bash
@@ -218,19 +218,7 @@ CREATE DATABASE <your_database_name>;
 - You can use any name you want, but make sure it is descriptive and unique. For example, you can use the name of your project or application.
 - You have now created a new database for your application.
 
-## 12. Install NGINX and Supervisor
-
-- NGINX is a high-performance web server that can serve static and media files, as well as proxy requests to your Django application. Supervisor is a process control system that can monitor and manage your Django application and ensure that it is always running.
-- To install NGINX and Supervisor on your Droplet, you can use the `apt` package manager:
-
-```bash
-sudo apt install nginx supervisor
-```
-
-- You may be asked to confirm the installation. Press **Enter** to continue.
-- You have now installed NGINX and Supervisor on your Droplet.
-
-## 13. Setup a virtual environment on your Droplet to manage requirements and packages
+## 12. Setup a virtual environment on your Droplet to manage requirements and packages
 
 - A virtual environment is a tool that allows you to create an isolated Python environment for your project, where you can install and manage the packages and dependencies that your project requires, without affecting the system-wide Python installation.
 - To create a virtual environment on your Droplet, you can use the `virtualenv` command that you installed earlier. First, create a directory where you will store your project files and move into it:
@@ -268,7 +256,7 @@ pip install -r requirements.txt
 - This will install all the packages and their dependencies that are listed in the `requirements.txt` file, such as Django, Gunicorn, dj-database-url, and psycopg2.
 - You have now set up a virtual environment on your Droplet and installed the Python packages that your project needs.
 
-## 14. Create and configure an application user for your Django application
+## 13. Create and configure an application user for your Django application
 
 - It is not recommended to run your Django application as the nonroot user that you created earlier, as it can pose security risks and grant too much access to your system. Therefore, it is better to create a dedicated application user that will only run your Django application and have limited permissions.
 - To create a new application user, use the `adduser` command and provide a username. You can use the same name as your project or application:
@@ -286,9 +274,32 @@ sudo usermod -aG www-data <your_application_user>
 
 - You have now created a new application user for your Django application.
 
-## 15. Configure the Python virtual environment and clone your project repo
+## 14. Configure the Python virtual environment and clone your project repo
 
-- The next step is to configure the Python virtual environment that you created earlier and clone your project repo from GitHub to your Droplet. To do this, you need to log in to your Droplet as the application user that you created in the previous step. You can do this by using the `su` command and providing the username:
+- The next step is to configure the Python virtual environment that you created earlier and clone your project repo from GitHub to your Droplet.
+
+- To clone your project repo from GitHub, you need to have git installed on your Droplet. You can install git by using the `apt` package manager:
+
+```bash
+sudo apt install git
+```
+
+- You may be asked to confirm the installation. Press **Enter** to continue.
+
+
+- You should see a directory with the same name as your project, which contains your project files and directories.
+
+- To configure the Python virtual environment, you need to copy the virtual environment directory that you created earlier to the home directory of the application user. You can do this by using the `cp` command and providing the source and destination paths:
+
+```bash
+sudo cp -r /home/<your_username>/<your_project_name>/<virtual_environment_name> ~/<your_application_user>/<your_project_name>/
+```
+
+- This will copy the entire virtual environment directory to the home directory of the application user.
+
+- Now You need to log in to your Droplet as the application user that you created in the previous step.
+
+- You can do this by using the `su` command and providing the username:
 
 ```bash
 su - <your_application_user>
@@ -301,27 +312,8 @@ su - <your_application_user>
 ```
 
 - You are now logged in to your Droplet as the application user.
-- To configure the Python virtual environment, you need to copy the virtual environment directory that you created earlier to the home directory of the application user. You can do this by using the `cp` command and providing the source and destination paths:
 
-```bash
-cp -r /home/<your_username>/<your_project_name> ~/
-```
-
-- This will copy the entire virtual environment directory to the home directory of the application user. You can verify that the copy was successful by listing the contents of the home directory:
-
-```bash
-ls -l
-```
-
-- You should see a directory with the same name as your project, which contains the virtual environment files and directories.
-- To clone your project repo from GitHub, you need to have git installed on your Droplet. You can install git by using the `apt` package manager:
-
-```bash
-sudo apt install git
-```
-
-- You may be asked to confirm the installation. Press **Enter** to continue.
-- After the installation is complete, you need to clone your project repo to the home directory of the application user. You can do this by using the `git` command and providing the URL of your repo:
+- You need to clone your project repo to the home directory of the application user. You can do this by using the `git` command and providing the URL of your repo:
 
 ```bash
 git clone https://github.com/<your_github_username>/<your_project_name>.git
@@ -333,10 +325,11 @@ git clone https://github.com/<your_github_username>/<your_project_name>.git
 ls -l
 ```
 
-- You should see a directory with the same name as your project, which contains your project files and directories.
+- You should see a directory with the same name as your project, which contains the virtual environment files and directories.
+
 - You have now configured the Python virtual environment and cloned your project repo to your Droplet.
 
-## 16. Install your Django project's dependencies
+## 15. Install your Django project's dependencies
 
 - The next step is to install the Django project's dependencies that are not included in the `requirements.txt` file, such as the static and media files, the migrations, and the collectstatic command. To do this, you need to activate the virtual environment that you copied earlier and move into the project directory. You can do this by typing:
 
@@ -361,7 +354,7 @@ python manage.py collectstatic
 - The `migrate` command will create the necessary tables and indexes in the database that your Django application will use. The `collectstatic` command will collect all the static files that your Django application needs, such as CSS, JavaScript, and images, and copy them to a directory that the web server can access.
 - You have now installed your Django project's dependencies on your Droplet.
 
-## 17. Set the proper database connection credentials in your Django project's settings.py file and add your IP address to allowed hosts
+## 16. Set the proper database connection credentials in your Django project's settings.py file and add your IP address to allowed hosts
 
 - The next step is to set the proper database connection credentials in your Django project's settings.py file, which is the main configuration file for your Django application. You also need to add your Droplet's IP address to the list of allowed hosts, which tells Django which hosts are allowed to serve your application.
 - To edit the settings.py file, you can use a text editor such as `nano`:
@@ -390,7 +383,7 @@ ALLOWED_HOSTS = ['<your_droplet_ip>']
 - Save and close the file by pressing **Ctrl+X**, then **Y**, then **Enter**.
 - You have now set the proper database connection credentials in your Django project's settings.py file and added your IP address to the allowed hosts.
 
-## 18. Install and configure Gunicorn
+## 17. Install and configure Gunicorn
 
 - Gunicorn is a Python WSGI (Web Server Gateway Interface) server that can run your Django application and handle requests from the web server. To install Gunicorn on your Droplet, you can use the `pip` command within your virtual environment:
 
@@ -455,6 +448,18 @@ sudo systemctl status gunicorn
 
 - This means that the Gunicorn service is running and enabled on your Droplet.
 - You have now installed and configured Gunicorn on your Droplet.
+
+## 18. Install NGINX and Supervisor
+
+- NGINX is a high-performance web server that can serve static and media files, as well as proxy requests to your Django application. Supervisor is a process control system that can monitor and manage your Django application and ensure that it is always running.
+- To install NGINX and Supervisor on your Droplet, you can use the `apt` package manager:
+
+```bash
+sudo apt install nginx supervisor
+```
+
+- You may be asked to confirm the installation. Press **Enter** to continue.
+- You have now installed NGINX and Supervisor on your Droplet.
 
 ## 19. Configure NGINX
 
