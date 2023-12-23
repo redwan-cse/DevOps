@@ -93,27 +93,21 @@ systemctl restart ssh
 - Before you enable the firewall, you need to make sure that the SSH port (22 by default) is allowed, otherwise you will lock yourself out of your Droplet. You can do this by using the `ufw` command:
 
 ```bash
-ufw allow 22
-```
-- You can also enable HTTP/HTTPS and MySQL later
-```bash
-ufw allow 80 # HTTP
-ufw allow 443 # HTTPS
-ufw allow 3306 # MySQL
+sudo ufw allow 22
 ```
 
 - You should see a message saying `Rules updated` and `Rules updated (v6)`.
 - You can now enable the firewall by typing:
 
 ```bash
-ufw enable
+sudo ufw enable
 ```
 
 - You will be asked to confirm the action. Type `y` and press **Enter**. You should see a message saying `Firewall is active and enabled on system startup`.
 - You can check the status of the firewall and the rules that are applied by typing:
 
 ```bash
-ufw status
+sudo ufw status
 ```
 
 - You should see something like this:
@@ -179,7 +173,13 @@ sudo swapon --show
     /swapfile   file  1024M   0B  -2
 ```
 
-- Confirm swap space has not already been allocated using the `free -h` command. You should see something like this:
+- Confirm swap space has not already been allocated using the `free -h` command.
+
+```bash
+free -h
+```
+
+- You should see something like this:
 
 ```bash
               total        used        free      shared  buff/cache   available
@@ -207,42 +207,31 @@ sudo swapon --show
 sudo cp /etc/fstab /etc/fstab.bak
 ```
 
-- To make the swap file permanent, edit the `/etc/fstab` file and add the following line at the end:
+- To make the swap file permanent, edit the `/etc/fstab` file
+
+```bash
+sudo nano /etc/fstab
+```
+
+- And add the following line at the end:
 
 ```bash
 /swapfile swap swap defaults 0 0
 ```
 
-- To verify that the swap file is active, use the `free -h` command again. You should see something like this:
+- To verify that the swap file is active, use the `free -h` command again.
+
+```bash
+free -h
+```
+
+- You should see something like this:
 
 ```bash
               total        used        free      shared  buff/cache   available
 Mem:          969Mi       113Mi       133Mi       0.0Ki       738Mi       728Mi
 Swap:         1.0Gi          0B       1.0Gi
 ```
-
-### Adjust the Swappiness Setting
-
-- The `swappiness` property controls how aggressively Ubuntu swaps data out of RAM. This setting extends from 0 to 100. Higher values tell the system to use the swap file more often. Configure a setting at the upper end of this range to ensure RAM is also available for other applications. A low `swappiness` setting means the system is less likely to use the swap mechanism. Use a setting closer to zero when application performance is important.
-
-- Verify the current `swappiness` setting. The default value is `60`
-
-```bash
-cat /proc/sys/vm/swappiness
-```
-
-- To temporarily adjust the value of `swappiness`, use the `sysctl` utility. The following command lowers the value to `50`.
-
-```bash
-sudo sysctl vm.swappiness=50
-```
-
-- To permanently change this value, edit the `/etc/sysctl.conf` file. Add the following line to the bottom of the file.
-
-```bash
-vm.swappiness=50
-```
-
 
 ## Step 3: Install MySQL and run the configuration script
 
@@ -274,7 +263,7 @@ sudo mysql_secure_installation
 
 - You have now installed and configured MySQL on your Droplet.
 
-## Step 4: Create a dedicated MySQL user
+### Create a dedicated MySQL user
 
 - It is not recommended to use the root user for your Django application, as it can pose security risks and grant too much access to your database. Therefore, it is better to create a dedicated MySQL user that will only have access to the database that your application needs.
 - To create a new MySQL user, you need to log in to the MySQL shell as the root user. You can do this by typing:
@@ -298,24 +287,7 @@ CREATE USER '<your_mysql_username>'@'localhost' IDENTIFIED BY '<your_mysql_passw
 
 - You have now created a new MySQL user.
 
-## Step 5: Grant necessary database privileges to the user you just created
-
-- The new MySQL user needs to have the appropriate permissions to access and modify the database that your Django application will use. To grant the necessary privileges, use the `GRANT` statement and provide the database name and the username:
-
-```bash
-GRANT ALL ON <your_database_name>.* TO '<your_mysql_username>'@'localhost';
-```
-
-- This will grant the user all privileges on the database and its tables. You can also specify more granular permissions, such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, etc.
-- To apply the changes, use the `FLUSH` statement:
-
-```bash
-FLUSH PRIVILEGES;
-```
-
-- You have now granted the necessary database privileges to the user you just created.
-
-## Step 5: Create a new database for your application
+### Create a new database for your application
 
 - Log in to the MySQL shell as the new user by using the following command. Enter your password when prompted.
 
@@ -338,42 +310,76 @@ exit
 ```
 - You have now created a new database for your application.
 
+### Grant necessary database privileges to the user you just created
 
-## Step 6: Setup a virtual environment on your Droplet to manage requirements and packages
+- The new MySQL user needs to have the appropriate permissions to access and modify the database that your Django application will use. To grant the necessary privileges, use the `GRANT` statement and provide the database name and the username:
+
+```bash
+GRANT ALL ON <your_database_name>.* TO '<your_mysql_username>'@'localhost';
+```
+
+- This will grant the user all privileges on the database and its tables. You can also specify more granular permissions, such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, etc.
+- To apply the changes, use the `FLUSH` statement:
+
+```bash
+FLUSH PRIVILEGES;
+```
+
+- You have now granted the necessary database privileges to the user you just created.
+
+## Step 4: Install packges on your Droplet
 
 A virtual environment is a tool that allows you to create isolated Python environments for different projects. This way, you can avoid conflicts between different versions of packages and dependencies. To set up a virtual environment on your droplet, follow these steps:
 
-- Install the `python3-venv` package by using the following command:
+- Install the `python3-venv`, `python3-dev` package by using the following command:
 
 ```bash
-sudo apt install python3-venv -y
+sudo apt install python3-venv python3-dev
 ```
 
-- Create a new directory for your project by using the following command:
+- Now also install other packages to config mysql client by using the following command:
 
 ```bash
-mkdir ~/<your_project_name>
+sudo apt install pkg-config
+sudo apt install libsqlclient-dev
+sudo apt-get install pkg-config build-essential libmysqlclient-dev
 ```
 
-- Change to the project directory by using the following command:
+## Step 5: Create and configure an application user for your Django application
+
+- It is not recommended to run your Django application as the nonroot user that you created earlier, as it can pose security risks and grant too much access to your system. Therefore, it is better to create a dedicated application user that will only run your Django application and have limited permissions.
+
+- To create a new application user, use the `adduser` command and provide a username. You can use the same name as your project or application:
 
 ```bash
-cd ~/<your_project_name>
+sudo adduser <your_application_user>
 ```
 
-- Create a new virtual environment called `env` by using the following command:
+- You will be asked to set a password and provide some optional information for the user. You can leave the fields blank by pressing **Enter** or fill them as you wish.
+
+- You have now created a new application user for your Django application.
+
+## Step 6: Setup a virtual environment on your application user to manage requirements and packages
+
+- Switch to your application user using the following command:
 
 ```bash
-python3 -m venv env
+sudo su - <your_application_user>
+```
+
+- Create a new virtual environment called `venv` by using the following command:
+
+```bash
+python3 -m venv venv
 ```
 
 - Activate the virtual environment by using the following command:
 
 ```bash
-source env/bin/activate
+source venv/bin/activate
 ```
 
-- You should see `(env)` at the beginning of your prompt, indicating that you are in the virtual environment.
+- You should see `(venv)` at the beginning of your prompt, indicating that you are in the virtual environment.
 
 ## Step 7: Configure the Python virtual environment and clone your project repo
 
