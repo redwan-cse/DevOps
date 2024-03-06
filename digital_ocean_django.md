@@ -45,8 +45,7 @@ root@<your_droplet_name>:~#
 - Before you install any packages or software on your Droplet, it is a good practice to update the package index and upgrade the existing packages to their latest versions. You can do this by running the following commands:
 
 ```bash
-apt update
-apt upgrade
+apt update && apt upgrade -y
 ```
 
 - You may be prompted to confirm some actions or restart some services. Follow the instructions on the screen and press **Enter** to continue.
