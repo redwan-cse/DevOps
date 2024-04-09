@@ -1,15 +1,15 @@
-# Summary
+# Table of contents
 
-* AWS
-* Digital Ocean
-* Azure
-
-* Kubernetes/EKS
-* Docker
-* Terraform
-* Gitlab
-* ArgoCD
-* microservices
-* Grafana, Prometheus, loki
-* SonarQube
-* AWS/Azure
+* [INTRO](INTRO.md)
+* [AWS](aws.md)
+* [Digital Ocean](digital-ocean.md)
+* [Azure](azure.md)
+* [Kubernetes/EKS](kubernetes-eks.md)
+* [Docker](docker.md)
+* [Terraform](terraform.md)
+* [Gitlab](gitlab.md)
+* [ArgoCD](argocd.md)
+* [microservices](microservices.md)
+* [Grafana, Prometheus, loki](grafana-prometheus-loki.md)
+* [SonarQube](sonarqube.md)
+* [AWS/Azure](aws-azure.md)
